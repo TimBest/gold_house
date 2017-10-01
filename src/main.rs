@@ -5,7 +5,8 @@ extern crate urlencoded;
 extern crate hyper;
 extern crate xmlJSON;
 extern crate serde_json;
-extern crate iron_cors;
+extern crate staticfile;
+extern crate mount;
 
 use iron::prelude::*;
 use iron::status;
@@ -20,7 +21,8 @@ use std::io::Read;
 use xmlJSON::XmlDocument;
 use std::str::FromStr;
 use serde_json::{Value, Error};
-use iron_cors::CorsMiddleware;
+use staticfile::Static;
+use mount::Mount;
 
 #[derive(RustcEncodable)]
 struct CommoditiesJsonResponse {
@@ -115,13 +117,15 @@ fn zillow_handler(request: &mut Request) -> IronResult<Response> {
 }
 
 fn main() {
-    let cors_middleware = CorsMiddleware::with_allow_any(true);
     let mut router = Router::new();           // Alternative syntax:
-    router.get("/api/v1/address", zillow_handler, "address");
-    router.get("/api/v1/commodities", commodities_handler, "commodities");
+    router.get("/address", zillow_handler, "address");
+    router.get("/commodities", commodities_handler, "commodities");
 
-    let mut chain = Chain::new(router);
-    chain.link_around(cors_middleware);
+    let mut mount = Mount::new();
+    mount.mount("/", Static::new("static/"));
+    mount.mount("/api/v1", router);
+
+    let chain = Chain::new(mount);
 
     Iron::new(chain).http("localhost:5000").unwrap();
 }

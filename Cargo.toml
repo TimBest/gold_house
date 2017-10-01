@@ -11,4 +11,7 @@ urlencoded = "*"
 hyper = "0.8"
 xmlJSON = "0.2.0"
 serde_json = "1.0"
-iron-cors = "*"
+staticfile = "*"
+
+[dependencies.mount]
+git = "https://github.com/iron/mount.git"
