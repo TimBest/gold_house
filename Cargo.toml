@@ -1,0 +1,14 @@
+[package]
+name = "gold_house"
+version = "0.1.0"
+authors = ["Tim <hello@timbest.net>"]
+
+[dependencies]
+iron = "*"
+router = "*"
+rustc-serialize = "*"
+urlencoded = "*"
+hyper = "0.8"
+xmlJSON = "0.2.0"
+serde_json = "1.0"
+iron-cors = "*"
