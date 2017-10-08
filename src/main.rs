@@ -1,32 +1,31 @@
-extern crate iron;
-extern crate router;
+#![feature(plugin, custom_derive)]
+#![plugin(rocket_codegen)]
+
+extern crate rocket;
+extern crate rocket_contrib;
 extern crate rustc_serialize;
-extern crate urlencoded;
 extern crate hyper;
 extern crate xmlJSON;
-extern crate serde_json;
-extern crate staticfile;
-extern crate mount;
 
-use iron::prelude::*;
-use iron::status;
-use iron::mime::Mime;
-use router::Router;
+use rocket::response::content;
+use rocket_contrib::Template;
+use std::io::Read;
+use std::str::FromStr;
 use rustc_serialize::json;
 use rustc_serialize::json::ToJson;
-use urlencoded::UrlEncodedQuery;
 use hyper::Client;
 use hyper::Url;
-use std::io::Read;
 use xmlJSON::XmlDocument;
-use std::str::FromStr;
-use serde_json::{Value, Error};
-use staticfile::Static;
-use mount::Mount;
 
-#[derive(RustcEncodable)]
-struct CommoditiesJsonResponse {
-  gold: f32
+#[get("/api/v1/commodities")]
+fn commodities() -> content::Json<&'static str> {
+    content::Json("{ \"gold\": 22591738.036 }")
+}
+
+#[derive(FromForm)]
+struct Location {
+    address: String,
+    postal_code: String
 }
 
 #[derive(RustcEncodable)]
@@ -34,20 +33,6 @@ struct ZillowJsonResponse {
   house_sqft: String,
   lot_sqft: String,
   price: String,
-
-}
-
-#[derive(RustcEncodable)]
-struct ErrorJsonResponse {
-  error: String,
-}
-
-fn commodities_handler(_request: &mut Request) -> IronResult<Response> {
-    let response = CommoditiesJsonResponse { gold: 22591738.036 };
-    let out = json::encode(&response).unwrap();
-
-    let content_type = "application/json".parse::<Mime>().unwrap();
-    Ok(Response::with((content_type, status::Ok, out)))
 }
 
 fn get_zillow_data(address: String, postal_code: String) -> ZillowJsonResponse {
@@ -93,39 +78,23 @@ fn get_zillow_data(address: String, postal_code: String) -> ZillowJsonResponse {
         lot_sqft: "".to_string(),
         price: "".to_string(),
     }
-
 }
 
-fn zillow_handler(request: &mut Request) -> IronResult<Response> {
-    let content_type = "application/json".parse::<Mime>().unwrap();
-
-    let query = request.get_ref::<UrlEncodedQuery>().unwrap();
-    if let Some(address_param) = query.get("address") {
-        if let Some(postal_code_param) = query.get("postal_code") {
-            let address = format!("{}", &address_param[0]);
-            let postal_code = format!("{}", &postal_code_param[0]);
-            let response = get_zillow_data(address, postal_code);
-            let out = json::encode(&response).unwrap();
-            return Ok(Response::with((content_type, status::Ok, out)))
-        }
-    }
-    let response = ErrorJsonResponse {
-        error: "Specify address and postal_code query params".to_string(),
-    };
+#[get("/api/v1/zillow?<location>")]
+fn zillow(location: Location) -> String {
+    let response = get_zillow_data(location.address, location.postal_code);
     let out = json::encode(&response).unwrap();
-    Ok(Response::with((content_type, status::BadRequest, out)))
+    return out
+}
+
+#[get("/")]
+fn index() -> Template {
+    Template::render("index", {})
 }
 
 fn main() {
-    let mut router = Router::new();           // Alternative syntax:
-    router.get("/address", zillow_handler, "address");
-    router.get("/commodities", commodities_handler, "commodities");
-
-    let mut mount = Mount::new();
-    mount.mount("/", Static::new("static/"));
-    mount.mount("/api/v1", router);
-
-    let chain = Chain::new(mount);
-
-    Iron::new(chain).http("localhost:5000").unwrap();
+    rocket::ignite()
+        .mount("/", routes![index, commodities, zillow])
+        .attach(Template::fairing())
+        .launch();
 }
