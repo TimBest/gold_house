@@ -1,0 +1,9 @@
+[package]
+name = "zillow"
+version = "0.1.0"
+authors = ["Tim <hello@timbest.net>"]
+
+[dependencies]
+rustc-serialize = "*"
+hyper = "0.8"
+xmlJSON = "0.2.0"
