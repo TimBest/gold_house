@@ -7,7 +7,7 @@ authors = ["Tim <hello@timbest.net>"]
 rocket = "0.3.3"
 rocket_codegen = "0.3.3"
 rustc-serialize = "*"
-zillow = { path = "zillow" }
+zillow = { path = "clients/zillow" }
 
 [dependencies.rocket_contrib]
 version = "*"
