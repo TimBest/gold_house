@@ -5,3 +5,4 @@ authors = ["Tim <hello@timbest.net>"]
 
 [dependencies]
 quandl = { path = "../clients/quandl" }
+rustc-serialize = "*"

@@ -3,6 +3,7 @@ name = "jobs"
 version = "0.1.0"
 dependencies = [
  "quandl 0.1.0",
+ "rustc-serialize 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
