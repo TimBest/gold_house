@@ -1,4 +1,4 @@
 *.pyc
 dist/
 target/
-secrets
+Rocket.toml

@@ -18,6 +18,10 @@ export DEP_OPENSSL_INCLUDE=/usr/local/opt/openssl/include
 `note: ld: library not found for -lssl`
 https://github.com/sfackler/rust-openssl
 
+### Add keys
+- `cp Rocket.template.toml Rocket.toml`
+- add your api keys to Rocket.toml
+
 ### run project
 ```
 $ cargo run
