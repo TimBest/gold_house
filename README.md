@@ -20,7 +20,10 @@ https://github.com/sfackler/rust-openssl
 
 ### Add keys
 - `cp Rocket.template.toml Rocket.toml`
-- add your api keys to Rocket.toml
+- add keys
+
+- `cp jobs/api_keys.template.toml jobs/api_keys.toml`
+- add key
 
 ### run project
 ```
