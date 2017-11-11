@@ -1,22 +1,50 @@
-extern crate rustc_serialize;
 extern crate hyper;
-extern crate xmlJSON;
+extern crate serde_xml_rs;
+
+#[macro_use]
+extern crate serde_derive;
 
 pub mod client {
     use std::io::Read;
-    use std::str::FromStr;
     use hyper::Client;
     use hyper::Url;
-    use xmlJSON::XmlDocument;
-    use rustc_serialize::json;
-    use rustc_serialize::json::ToJson;
+    use serde_xml_rs::deserialize;
 
-    #[derive(RustcEncodable)]
+    #[derive(Serialize, Deserialize)]
     pub struct ZillowJsonResponse {
       house_sqft: String,
       lot_sqft: String,
       price: String,
     }
+
+    #[derive(Debug, Deserialize)]
+    pub struct Zestimate {
+        amount: String,
+    }
+
+    #[derive(Debug, Deserialize)]
+    pub struct House {
+        lotSizeSqFt: String,
+        finishedSqFt: String,
+        zestimate: Zestimate,
+    }
+
+    #[derive(Debug, Deserialize)]
+    pub struct ZillowResult {
+        #[serde(rename = "result", default)]
+        result: Vec<House>
+    }
+
+    #[derive(Debug, Deserialize)]
+    pub struct ZillowResponse {
+        results: ZillowResult
+    }
+
+    #[derive(Debug, Deserialize)]
+    pub struct ZillowXMLResponse {
+        response: ZillowResponse,
+    }
+
 
     pub fn get_deep_search_results(address: String, postal_code: String, zws_id: String) -> ZillowJsonResponse {
 
@@ -34,32 +62,17 @@ pub mod client {
         let mut s = String::new();
         res.read_to_string(&mut s).unwrap();
 
-        /* conver to JSON */
-        let document : XmlDocument = XmlDocument::from_str(&s).unwrap();
-        let jsn : json::Json = document.to_json();
+        /* parse XML */
+        let document: ZillowXMLResponse = deserialize(s.as_bytes()).unwrap();
+        let house = match document.response.results.result.iter().nth(0) {
+            None => panic!("house not found"),
+            Some(house) => house,
+        };
 
-        if let Some(finishedSqFt) = jsn.search("finishedSqFt") {
-            if let Some(finished_sqft) = finishedSqFt.search("_") {
-                if let Some(lotSizeSqFt) = jsn.search("lotSizeSqFt") {
-                    if let Some(lot_sqft) = lotSizeSqFt.search("_") {
-                        if let Some(zestimate) = jsn.search("zestimate") {
-                            if let Some(price) = zestimate.search("_") {
-                                return ZillowJsonResponse {
-                                    house_sqft: str::replace(&format!("{}", finished_sqft), "\"", ""),
-                                    lot_sqft: str::replace(&format!("{}", lot_sqft), "\"", ""),
-                                    price: str::replace(&format!("{}", price), "\"", ""),
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return ZillowJsonResponse {
-            house_sqft: "".to_string(),
-            lot_sqft: "".to_string(),
-            price: "".to_string(),
+        ZillowJsonResponse {
+            house_sqft: format!("{}", house.lotSizeSqFt),
+            lot_sqft: format!("{}", house.finishedSqFt),
+            price: format!("{}", house.zestimate.amount),
         }
     }
 }

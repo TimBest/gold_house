@@ -3,7 +3,8 @@
 
 extern crate rocket;
 extern crate rocket_contrib;
-extern crate rustc_serialize;
+extern crate serde;
+extern crate serde_json;
 extern crate zillow;
 
 use rocket::fairing::AdHoc;
@@ -11,7 +12,6 @@ use rocket::response::NamedFile;
 use rocket::response::status::NotFound;
 use rocket::State;
 use rocket_contrib::Template;
-use rustc_serialize::json;
 use std::path::Path;
 use zillow::client;
 
@@ -39,7 +39,7 @@ fn zillow(location: Location, api_keys: State<ApiKeys>) -> String {
         location.postal_code,
         zillow_api_key
     );
-    let out = json::encode(&response).unwrap();
+    let out = serde_json::to_string(&response).unwrap();
     return out
 }
 

@@ -6,7 +6,9 @@ authors = ["Tim <hello@timbest.net>"]
 [dependencies]
 rocket = "0.3.3"
 rocket_codegen = "0.3.3"
-rustc-serialize = "*"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
 zillow = { path = "clients/zillow" }
 
 [dependencies.rocket_contrib]

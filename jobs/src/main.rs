@@ -11,7 +11,6 @@ extern crate quandl;
 extern crate serde_derive;
 extern crate toml;
 
-// use serde_json::Error;
 use quandl::client;
 use quandl::client::StringFloat;
 
