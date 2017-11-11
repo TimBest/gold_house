@@ -7,10 +7,12 @@ extern crate rustc_serialize;
 extern crate zillow;
 
 use rocket::fairing::AdHoc;
-use rocket::response::content;
+use rocket::response::NamedFile;
+use rocket::response::status::NotFound;
 use rocket::State;
 use rocket_contrib::Template;
 use rustc_serialize::json;
+use std::path::Path;
 use zillow::client;
 
 struct ApiKeys {
@@ -18,8 +20,9 @@ struct ApiKeys {
 }
 
 #[get("/api/v1/commodities")]
-fn commodities() -> content::Json<&'static str> {
-    content::Json("{ \"gold\": 22591738.036 }")
+fn commodities() -> Result<NamedFile, NotFound<String>> {
+    let path = Path::new("data/commodities.json");
+    NamedFile::open(&path).map_err(|_| NotFound(format!("Bad path: {}", path.display())))
 }
 
 #[derive(FromForm)]
@@ -50,7 +53,6 @@ fn main() {
         .mount("/", routes![index, commodities, zillow])
         .attach(Template::fairing())
         .attach(AdHoc::on_attach(|rocket| {
-            println!("Adding token managed state from config...");
             let zillow_api_key = rocket.config().get_str("zillow_api_key").unwrap_or("").to_string();
             Ok(rocket.manage(ApiKeys { zillow: zillow_api_key }))
         }))

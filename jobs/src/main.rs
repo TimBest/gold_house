@@ -52,7 +52,7 @@ fn value_of_gold(quandl_api_key: String) -> f64 {
 }
 
 fn save_commodities(commodities: Commodities) {
-    let path = Path::new("commodities.json");
+    let path = Path::new("../data/commodities.json");
     let display = path.display();
 
     // Open a file in write-only mode, returns `io::Result<File>`
