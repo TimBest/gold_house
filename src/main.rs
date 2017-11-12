@@ -12,7 +12,7 @@ use rocket::response::NamedFile;
 use rocket::response::status::NotFound;
 use rocket::State;
 use rocket_contrib::Template;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use zillow::client;
 
 struct ApiKeys {
@@ -43,6 +43,11 @@ fn zillow(location: Location, api_keys: State<ApiKeys>) -> String {
     return out
 }
 
+#[get("/static/<file..>")]
+fn files(file: PathBuf) -> Option<NamedFile> {
+    NamedFile::open(Path::new("static/").join(file)).ok()
+}
+
 #[get("/")]
 fn index() -> Template {
     Template::render("index", {})
@@ -50,7 +55,7 @@ fn index() -> Template {
 
 fn main() {
     rocket::ignite()
-        .mount("/", routes![index, commodities, zillow])
+        .mount("/", routes![index, files, commodities, zillow])
         .attach(Template::fairing())
         .attach(AdHoc::on_attach(|rocket| {
             let zillow_api_key = rocket.config().get_str("zillow_api_key").unwrap_or("").to_string();
