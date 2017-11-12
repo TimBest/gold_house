@@ -29,9 +29,7 @@ fn api_keys() -> ApiKeys {
     let display = path.display();
 
     let mut file = match File::open("api_keys.toml") {
-        Err(why) => panic!("couldn't open {}: {}",
-                           display,
-                           why.description()),
+        Err(why) => panic!("couldn't open {}: {}", display, why.description()),
         Ok(file) => file,
     };
     let mut contents = String::new();
@@ -41,7 +39,7 @@ fn api_keys() -> ApiKeys {
 }
 
 fn value_of_gold(quandl_api_key: String) -> f64 {
-    let v = client::get_gold(quandl_api_key);
+    let v = client::get_dataset(quandl_api_key, "LBMA/GOLD".to_string());
     let usd_per_troy_ounce: f64 = match v.dataset.data[0][1] {
         StringFloat::Date(ref s) => 0.0 as f64,
         StringFloat::Price(f) => f,
@@ -56,18 +54,12 @@ fn save_commodities(commodities: Commodities) {
 
     // Open a file in write-only mode, returns `io::Result<File>`
     let mut file = match File::create(&path) {
-        Err(why) => panic!("couldn't create {}: {}",
-                           display,
-                           why.description()),
+        Err(why) => panic!("couldn't create {}: {}", display, why.description()),
         Ok(file) => file,
     };
 
-    // Write the `LOREM_IPSUM` string to `file`, returns `io::Result<()>`
     match file.write_all(serde_json::to_string(&commodities).unwrap().as_bytes()) {
-        Err(why) => {
-            panic!("couldn't write to {}: {}", display,
-                                               why.description())
-        },
+        Err(why) => panic!("couldn't write to {}: {}", display, why.description()),
         Ok(_) => println!("successfully wrote to {}", display),
     };
 }

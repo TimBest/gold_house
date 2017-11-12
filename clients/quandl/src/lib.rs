@@ -8,7 +8,6 @@ pub mod client {
     use std::io::Read;
     use hyper::Client;
     use hyper::Url;
-    use serde_json::Error;
     use serde_json;
 
     #[derive(Serialize, Deserialize)]
@@ -29,10 +28,11 @@ pub mod client {
         pub dataset: Dataset,
     }
 
-    pub fn get_gold(api_key: String) -> Response {
+    pub fn get_dataset(api_key: String, quandl_code: String) -> Response {
         /* Request Home Data */
         let client = Client::new();
-        let mut url = Url::parse("https://www.quandl.com/api/v3/datasets/LBMA/GOLD.json").unwrap();
+        let path = format!("https://www.quandl.com/api/v3/datasets/{}.json", quandl_code);
+        let mut url = Url::parse(&path).unwrap();
         url.set_query_from_pairs([
             ("rows", "1".to_string()),
             ("api_key", api_key),
