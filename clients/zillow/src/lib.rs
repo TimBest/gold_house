@@ -64,15 +64,19 @@ pub mod client {
 
         /* parse XML */
         let document: ZillowXMLResponse = deserialize(s.as_bytes()).unwrap();
-        let house = match document.response.results.result.iter().nth(0) {
-            None => panic!("house not found"),
-            Some(house) => house,
-        };
+        let house = document.response.results.result.iter().nth(0);
 
-        ZillowJsonResponse {
-            house_sqft: format!("{}", house.lotSizeSqFt),
-            lot_sqft: format!("{}", house.finishedSqFt),
-            price: format!("{}", house.zestimate.amount),
+        match house {
+            Some(house) => ZillowJsonResponse {
+                house_sqft: format!("{}", house.lotSizeSqFt),
+                lot_sqft: format!("{}", house.finishedSqFt),
+                price: format!("{}", house.zestimate.amount),
+            },
+            None => ZillowJsonResponse {
+                house_sqft: "".to_string(),
+                lot_sqft: "".to_string(),
+                price: "".to_string(),
+            },
         }
     }
 }
