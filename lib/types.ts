@@ -21,6 +21,12 @@ export type AssessorResult = {
   sqft: number | null;
 };
 
+export type AssessorQuery = {
+  address: string;
+  lat: number;
+  lng: number;
+};
+
 export type CommodityPriceSnapshot = {
   /** USD per cubic meter for a solid block of the commodity. */
   pricePerM3: number;
