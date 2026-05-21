@@ -1,3 +1,4 @@
+import { isPositiveFinite } from "./math";
 import type { CommodityId, UrlState } from "./types";
 
 const VALID_COMMODITIES = new Set<CommodityId>(["gold", "oil", "sugar"]);
@@ -12,8 +13,7 @@ function asCommodity(raw: string | null): CommodityId {
 function asPositiveNumber(raw: string | null): number | undefined {
   if (raw === null) return undefined;
   const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) return undefined;
-  return n;
+  return isPositiveFinite(n) ? n : undefined;
 }
 
 export function parseSearchParams(sp: URLSearchParams): UrlState {
