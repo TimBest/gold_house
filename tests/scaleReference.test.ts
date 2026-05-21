@@ -23,6 +23,12 @@ describe("REFERENCE_OBJECTS", () => {
       "burj-khalifa",
     ]);
   });
+
+  test("every object has a glyph", () => {
+    for (const r of REFERENCE_OBJECTS) {
+      expect(r.glyph).toBeTruthy();
+    }
+  });
 });
 
 describe("pickReference", () => {

@@ -10,6 +10,8 @@ export type ReferenceObject = {
   heightM: number;
   svgFile: string;
   maxMultiple: number;
+  /** Single-glyph stand-in used by IsoViz until proper SVGs land. */
+  glyph: string;
 };
 
 export const REFERENCE_OBJECTS: ReferenceObject[] = [
@@ -19,6 +21,7 @@ export const REFERENCE_OBJECTS: ReferenceObject[] = [
     heightM: 0.00085,
     svgFile: "credit-card.svg",
     maxMultiple: 5,
+    glyph: "💳",
   },
   {
     id: "human",
@@ -26,6 +29,7 @@ export const REFERENCE_OBJECTS: ReferenceObject[] = [
     heightM: 1.7,
     svgFile: "human.svg",
     maxMultiple: 5,
+    glyph: "🧍",
   },
   {
     id: "telephone-pole",
@@ -33,6 +37,7 @@ export const REFERENCE_OBJECTS: ReferenceObject[] = [
     heightM: 12,
     svgFile: "telephone-pole.svg",
     maxMultiple: 5,
+    glyph: "📏",
   },
   {
     id: "statue-of-liberty",
@@ -40,6 +45,7 @@ export const REFERENCE_OBJECTS: ReferenceObject[] = [
     heightM: 93,
     svgFile: "statue-of-liberty.svg",
     maxMultiple: 5,
+    glyph: "🗽",
   },
   {
     id: "eiffel-tower",
@@ -47,6 +53,7 @@ export const REFERENCE_OBJECTS: ReferenceObject[] = [
     heightM: 330,
     svgFile: "eiffel-tower.svg",
     maxMultiple: 5,
+    glyph: "🗼",
   },
   {
     id: "burj-khalifa",
@@ -54,6 +61,7 @@ export const REFERENCE_OBJECTS: ReferenceObject[] = [
     heightM: 828,
     svgFile: "burj-khalifa.svg",
     maxMultiple: 5,
+    glyph: "🏙️",
   },
 ];
 

@@ -1,0 +1,14 @@
+# Netlify configuration for the Gold House Next.js app.
+# The official @netlify/plugin-nextjs runtime is auto-installed by Netlify
+# for Next.js projects and handles SSR + API routes.
+
+[build]
+  command = "bun run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Bun is auto-detected from bun.lock, but pin the version for reproducibility.
+  BUN_VERSION = "1.3.11"
+  # Next.js 15 sometimes warns about telemetry on first build — silence it.
+  NEXT_TELEMETRY_DISABLED = "1"
