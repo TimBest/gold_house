@@ -3,6 +3,10 @@ import type { HeightComputationInput, Polygon } from "./types";
 const SQFT_TO_SQM = 0.0929;
 const METERS_PER_DEG_LAT = 111_320;
 
+export function isPositiveFinite(n: unknown): n is number {
+  return typeof n === "number" && Number.isFinite(n) && n > 0;
+}
+
 export function sqFtToSqM(sqft: number): number {
   if (sqft < 0) throw new Error("sqft must be non-negative");
   return sqft * SQFT_TO_SQM;

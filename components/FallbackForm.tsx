@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { isPositiveFinite } from "@/lib/math";
 
 export function FallbackForm({
   onSubmit,
@@ -14,8 +15,7 @@ export function FallbackForm({
     e.preventDefault();
     const s = Number(sqft);
     const v = Number(value);
-    if (!Number.isFinite(s) || s <= 0) return;
-    if (!Number.isFinite(v) || v <= 0) return;
+    if (!isPositiveFinite(s) || !isPositiveFinite(v)) return;
     onSubmit({ sqft: s, value: v });
   }
 

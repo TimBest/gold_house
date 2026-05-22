@@ -7,10 +7,10 @@ export async function GET(req: Request) {
   const lng = Number(url.searchParams.get("lng"));
   try {
     const result = await fetchFootprint(lat, lng);
-    if (result === null) {
-      return NextResponse.json({ result: null });
-    }
-    return NextResponse.json({ result });
+    return NextResponse.json(
+      { result },
+      { headers: { "cache-control": "public, max-age=3600" } }
+    );
   } catch (err) {
     if (err instanceof FootprintError) {
       return NextResponse.json(

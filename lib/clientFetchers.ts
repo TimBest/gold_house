@@ -19,11 +19,17 @@ async function getJson<T>(path: string): Promise<T> {
   return body as T;
 }
 
+function buildUrl(path: string, params: Record<string, string | number>): string {
+  const sp = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) sp.set(k, String(v));
+  return `${path}?${sp.toString()}`;
+}
+
 export const clientFetchers: Fetchers = {
   geocode: async (address) => {
     try {
       return await getJson<GeocodeResult>(
-        `/api/geocode?address=${encodeURIComponent(address)}`
+        buildUrl("/api/geocode", { address })
       );
     } catch (err) {
       throw new GeocodeError("NO_RESULT", (err as Error).message);
@@ -32,7 +38,7 @@ export const clientFetchers: Fetchers = {
   footprint: async (lat, lng) => {
     try {
       const { result } = await getJson<{ result: FootprintResult | null }>(
-        `/api/footprint?lat=${lat}&lng=${lng}`
+        buildUrl("/api/footprint", { lat, lng })
       );
       return result;
     } catch (err) {
@@ -41,7 +47,7 @@ export const clientFetchers: Fetchers = {
   },
   assessor: async ({ address, lat, lng }: AssessorQuery) => {
     const { result } = await getJson<{ result: AssessorResult | null }>(
-      `/api/assessor?address=${encodeURIComponent(address)}&lat=${lat}&lng=${lng}`
+      buildUrl("/api/assessor", { address, lat, lng })
     );
     return result;
   },

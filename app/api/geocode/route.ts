@@ -6,7 +6,9 @@ export async function GET(req: Request) {
   const address = url.searchParams.get("address") ?? "";
   try {
     const result = await geocodeAddress(address);
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: { "cache-control": "public, max-age=3600" },
+    });
   } catch (err) {
     if (err instanceof GeocodeError) {
       return NextResponse.json(
