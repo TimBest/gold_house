@@ -3,7 +3,7 @@
 import { COMMODITIES } from "@/lib/commodities";
 import type { CommodityId } from "@/lib/types";
 
-const IDS: CommodityId[] = ["gold", "oil", "sugar"];
+const IDS: CommodityId[] = ["gold", "oil", "sugar", "soybeans"];
 
 export function CommodityPicker({
   selected,
@@ -13,7 +13,7 @@ export function CommodityPicker({
   onSelect: (id: CommodityId) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {IDS.map((id) => {
         const c = COMMODITIES[id];
         const isSelected = id === selected;

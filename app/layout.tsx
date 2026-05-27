@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Gold House — Home Value Commodity Visualizer",
   description:
-    "Visualize how tall a block of gold, oil, or sugar worth your home's assessed value would be.",
+    "Visualize how tall a block of gold, oil, sugar, or soybeans worth your home's assessed value would be.",
 };
 
 export default function RootLayout({

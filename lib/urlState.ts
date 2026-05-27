@@ -1,7 +1,12 @@
 import { isPositiveFinite } from "./math";
 import type { CommodityId, UrlState } from "./types";
 
-const VALID_COMMODITIES = new Set<CommodityId>(["gold", "oil", "sugar"]);
+const VALID_COMMODITIES = new Set<CommodityId>([
+  "gold",
+  "oil",
+  "sugar",
+  "soybeans",
+]);
 
 function asCommodity(raw: string | null): CommodityId {
   if (raw && VALID_COMMODITIES.has(raw as CommodityId)) {

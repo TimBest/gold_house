@@ -1,4 +1,4 @@
-export type CommodityId = "gold" | "oil" | "sugar";
+export type CommodityId = "gold" | "oil" | "sugar" | "soybeans";
 
 export type LatLng = { lat: number; lng: number };
 

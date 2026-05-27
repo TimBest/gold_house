@@ -13,7 +13,8 @@ import {
   type ScreenPoint,
 } from "@/lib/isoProjection";
 import type { ComputeResult } from "@/lib/pipeline";
-import type { ReferenceObject } from "@/lib/scaleReference";
+import { pickReference, type ReferenceObject } from "@/lib/scaleReference";
+import type { CommodityId, CommodityPrices } from "@/lib/types";
 
 const VIEWBOX_W = 480;
 const VIEWBOX_H = 380;
@@ -32,32 +33,108 @@ const REFERENCE_ASPECT: Record<ReferenceObject["id"], number> = {
 
 export function IsoViz({
   result,
+  prices,
 }: {
   result: Extract<ComputeResult, { kind: "ok" }>;
+  prices: CommodityPrices;
 }) {
   const config = COMMODITIES[result.commodity];
   const heightM = result.heightM;
   const ref = result.reference;
-  const camera = pickCamera(heightM);
+
+  // Compute alt-commodity heights so the camera, viewBox, and reference
+  // column can all be locked to the tallest commodity for this home. Then
+  // only the prism's CSS scaleY changes between commodity selections,
+  // letting the shape transition smoothly over 600 ms.
+  const altHeights = (Object.keys(COMMODITIES) as CommodityId[]).map(
+    (id) =>
+      result.assessedValue /
+      (prices[id].pricePerM3 * result.footprintAreaM2)
+  );
+  const maxAltHeight = Math.max(heightM, ...altHeights);
+
+  const camera = pickCamera(maxAltHeight);
+  const phantomReference = pickReference(maxAltHeight);
 
   const localFootprint: Point2D[] =
     result.polygon && result.polygon.length >= 3
       ? polygonToLocalMeters(result.polygon)
       : squareInMeters(result.footprintAreaM2);
 
-  const geom = extrudedPrismGeometry(localFootprint, heightM, camera);
+  // Phantom geometry: never drawn — sized to the tallest commodity, used
+  // only so fitToViewBox produces a layout that fits any commodity.
+  const phantomGeom = extrudedPrismGeometry(
+    localFootprint,
+    maxAltHeight,
+    camera
+  );
 
-  const prismPts: ScreenPoint[] = [
-    ...geom.topFace,
-    ...geom.sideFaces.flatMap((f) => f.points),
+  // Unit geometry: actually drawn. Top is at z=1 in world; CSS
+  // `scaleY(heightM)` restores the real extrusion height because
+  // project3D is linear in z (see lib/isoProjection.ts).
+  const unitGeom = extrudedPrismGeometry(localFootprint, 1, camera);
+
+  // Reference column slot is sized to the phantom (max) reference so any
+  // commodity's actual reference fits inside it.
+  const phantomRefAspect = REFERENCE_ASPECT[phantomReference.object.id];
+  const phantomUseCompact =
+    camera.showReferenceAsMarker ||
+    phantomReference.overflow ||
+    phantomReference.count > MAX_RENDERED_STACK;
+  const phantomRenderedCount = phantomUseCompact
+    ? 1
+    : Math.max(1, Math.min(phantomReference.count, MAX_RENDERED_STACK));
+  const phantomMarkerScale = camera.showReferenceAsMarker
+    ? Math.min(
+        1,
+        (maxAltHeight * 0.15) /
+          Math.max(phantomReference.object.heightM, 1e-6)
+      )
+    : 1;
+  const phantomDrawUnitHeight =
+    phantomReference.object.heightM * phantomMarkerScale;
+  const phantomDrawUnitWidth = phantomDrawUnitHeight * phantomRefAspect;
+  const phantomRefColumnHeight = phantomDrawUnitHeight * phantomRenderedCount;
+
+  const phantomPrismPts: ScreenPoint[] = [
+    ...phantomGeom.topFace,
+    ...phantomGeom.sideFaces.flatMap((f) => f.points),
   ];
-  const prismMinSx = Math.min(...prismPts.map((p) => p.sx));
-  const prismMaxSx = Math.max(...prismPts.map((p) => p.sx));
+  const phantomMinSx = Math.min(...phantomPrismPts.map((p) => p.sx));
+  const phantomMaxSx = Math.max(...phantomPrismPts.map((p) => p.sx));
 
-  const aspect = REFERENCE_ASPECT[ref.object.id];
-  const refUnitHeight = ref.object.heightM;
-  const refUnitWidth = refUnitHeight * aspect;
+  const gap = Math.max(
+    (phantomMaxSx - phantomMinSx) * 0.12,
+    maxAltHeight * 0.05,
+    phantomDrawUnitWidth * 0.5,
+    1
+  );
+  const refLeft = phantomMaxSx + gap;
+  const refRight = refLeft + phantomDrawUnitWidth;
 
+  const layoutPoints: ScreenPoint[] = [
+    ...phantomPrismPts,
+    { sx: refLeft, sy: 0 },
+    { sx: refRight, sy: 0 },
+    { sx: refLeft, sy: -phantomRefColumnHeight },
+    { sx: refRight, sy: -phantomRefColumnHeight },
+  ];
+  const { viewBox, scale, offset } = fitToViewBox(
+    layoutPoints,
+    VIEWBOX_W,
+    VIEWBOX_H,
+    PADDING_PX
+  );
+
+  const topFacePx = unitGeom.topFace.map((p) => applyScale(p, scale, offset));
+  const sideFacesPx = unitGeom.sideFaces.map((f) => ({
+    points: f.points.map((p) => applyScale(p, scale, offset)),
+    shade: f.shade,
+  }));
+  const baseCenterPx = applyScale(unitGeom.baseCenter, scale, offset);
+  const baseRadiusPx = unitGeom.baseRadius * scale;
+
+  const actualRefAspect = REFERENCE_ASPECT[ref.object.id];
   const useCompact =
     camera.showReferenceAsMarker ||
     ref.overflow ||
@@ -65,59 +142,21 @@ export function IsoViz({
   const renderedCount = useCompact
     ? 1
     : Math.max(1, Math.min(ref.count, MAX_RENDERED_STACK));
-
-  // In wide-iso mode the reference shrinks to roughly 15% of tower height
-  // so it stays visible alongside a 500+ m prism.
-  const markerScale = camera.showReferenceAsMarker
-    ? Math.min(1, (heightM * 0.15) / Math.max(refUnitHeight, 1e-6))
+  const actualMarkerScale = camera.showReferenceAsMarker
+    ? Math.min(1, (heightM * 0.15) / Math.max(ref.object.heightM, 1e-6))
     : 1;
-  const drawUnitHeight = refUnitHeight * markerScale;
-  const drawUnitWidth = refUnitWidth * markerScale;
-  const refColumnHeight = drawUnitHeight * renderedCount;
-
-  // Gap in the same screen-meter units as the prism. Scales with the larger
-  // of the prism's projected width and the tower height so the spacing
-  // never collapses.
-  const gap = Math.max(
-    (prismMaxSx - prismMinSx) * 0.12,
-    heightM * 0.05,
-    drawUnitWidth * 0.5,
-    1
-  );
-  const refLeft = prismMaxSx + gap;
-  const refRight = refLeft + drawUnitWidth;
-
-  const allPoints: ScreenPoint[] = [
-    ...prismPts,
-    { sx: refLeft, sy: 0 },
-    { sx: refRight, sy: 0 },
-    { sx: refLeft, sy: -refColumnHeight },
-    { sx: refRight, sy: -refColumnHeight },
-  ];
-  const { viewBox, scale, offset } = fitToViewBox(
-    allPoints,
-    VIEWBOX_W,
-    VIEWBOX_H,
-    PADDING_PX
-  );
-
-  const topFacePx = geom.topFace.map((p) => applyScale(p, scale, offset));
-  const sideFacesPx = geom.sideFaces.map((f) => ({
-    points: f.points.map((p) => applyScale(p, scale, offset)),
-    shade: f.shade,
-  }));
-  const baseCenterPx = applyScale(geom.baseCenter, scale, offset);
-  const baseRadiusPx = geom.baseRadius * scale;
+  const actualDrawUnitHeight = ref.object.heightM * actualMarkerScale;
+  const actualDrawUnitWidth = actualDrawUnitHeight * actualRefAspect;
 
   const refGlyphs: { x: number; y: number; w: number; h: number; key: number }[] = [];
   for (let i = 0; i < renderedCount; i++) {
     const bottomLeft = applyScale(
-      { sx: refLeft, sy: -i * drawUnitHeight },
+      { sx: refLeft, sy: -i * actualDrawUnitHeight },
       scale,
       offset
     );
-    const pxW = drawUnitWidth * scale;
-    const pxH = drawUnitHeight * scale;
+    const pxW = actualDrawUnitWidth * scale;
+    const pxH = actualDrawUnitHeight * scale;
     refGlyphs.push({
       key: i,
       x: bottomLeft.sx,
@@ -173,7 +212,13 @@ export function IsoViz({
             fill="rgba(0,0,0,0.14)"
           />
 
-          <g>
+          <g
+            style={{
+              transform: `scaleY(${heightM})`,
+              transformOrigin: `${baseCenterPx.sx}px ${baseCenterPx.sy}px`,
+              transition: "transform 600ms ease-in-out",
+            }}
+          >
             {sideFacesPx.map((f, i) => (
               <path
                 key={i}
@@ -181,6 +226,7 @@ export function IsoViz({
                 stroke={stroke}
                 strokeWidth={0.6}
                 strokeLinejoin="round"
+                vectorEffect="non-scaling-stroke"
                 style={{
                   fill: sideColor(f.shade),
                   transition: "fill 600ms ease-in-out",
@@ -192,6 +238,7 @@ export function IsoViz({
               stroke={stroke}
               strokeWidth={0.6}
               strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
               style={{
                 fill: config.color,
                 transition: "fill 600ms ease-in-out",
