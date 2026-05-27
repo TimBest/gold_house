@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 600" fill="currentColor" aria-hidden="true">
+  <line x1="100" y1="0" x2="100" y2="40" stroke="currentColor" stroke-width="3"/>
+  <path d="M96 40 L104 40 L106 120 L94 120 Z"/>
+  <path d="M88 120 L112 120 L116 220 L84 220 Z"/>
+  <path d="M76 220 L124 220 L130 330 L70 330 Z"/>
+  <path d="M60 330 L140 330 L148 440 L52 440 Z"/>
+  <path d="M40 440 L160 440 L172 540 L28 540 Z"/>
+  <rect x="20" y="540" width="160" height="60"/>
+  <line x1="50" y1="450" x2="50" y2="540" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+  <line x1="80" y1="450" x2="80" y2="540" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+  <line x1="120" y1="450" x2="120" y2="540" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+  <line x1="150" y1="450" x2="150" y2="540" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+</svg>

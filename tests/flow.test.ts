@@ -136,9 +136,9 @@ describe("computeForState — error path", () => {
     expect(result.kind).toBe("error");
   });
 
-  test("commodity switch changes height (gold > oil > sugar for same home)", async () => {
-    // Gold is dense per dollar → SHORTEST tower. Oil is the cheapest per
-    // m^3 → TALLEST tower. Let's just assert each produces a different finite
+  test("commodity switch changes height across all four commodities", async () => {
+    // Gold is dense per dollar → SHORTEST tower. Soybeans/oil are cheapest
+    // per m^3 → TALLEST towers. Assert each produces a distinct finite
     // positive number.
     const base = {
       address: "x",
@@ -146,16 +146,18 @@ describe("computeForState — error path", () => {
       value: 500_000,
     } as const;
     const fetchers = fetchersFromObject();
-    const [g, o, s] = await Promise.all([
+    const [g, o, s, sb] = await Promise.all([
       computeForState({ ...base, commodity: "gold" }, PRICES, fetchers),
       computeForState({ ...base, commodity: "oil" }, PRICES, fetchers),
       computeForState({ ...base, commodity: "sugar" }, PRICES, fetchers),
+      computeForState({ ...base, commodity: "soybeans" }, PRICES, fetchers),
     ]);
-    if (g.kind !== "ok" || o.kind !== "ok" || s.kind !== "ok") {
+    if (g.kind !== "ok" || o.kind !== "ok" || s.kind !== "ok" || sb.kind !== "ok") {
       throw new Error("expected all ok");
     }
-    const heights = new Set([g.heightM, o.heightM, s.heightM]);
-    expect(heights.size).toBe(3);
+    const heights = new Set([g.heightM, o.heightM, s.heightM, sb.heightM]);
+    expect(heights.size).toBe(4);
     expect(o.heightM).toBeGreaterThan(g.heightM);
+    expect(sb.heightM).toBeGreaterThan(g.heightM);
   });
 });
