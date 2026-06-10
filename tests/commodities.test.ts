@@ -6,8 +6,8 @@ import {
 } from "@/lib/commodities";
 
 describe("COMMODITIES constants", () => {
-  test("has gold, oil, sugar with required fields", () => {
-    for (const id of ["gold", "oil", "sugar"] as const) {
+  test("has gold, oil, sugar, soybeans with required fields", () => {
+    for (const id of ["gold", "oil", "sugar", "soybeans"] as const) {
       expect(COMMODITIES[id]).toBeDefined();
       expect(COMMODITIES[id].label).toBeTruthy();
       expect(COMMODITIES[id].emoji).toBeTruthy();
@@ -37,6 +37,14 @@ describe("pricePerM3", () => {
     expect(v).toBeCloseTo((0.2 / 0.453592) * 1590, 4);
   });
 
+  test("soybeans: $11.50/bushel → ~$325/m3", () => {
+    // (11.50 / 27.2155) * 770 = 325.4
+    const v = pricePerM3("soybeans", 11.5);
+    expect(v).toBeCloseTo((11.5 / 27.2155) * 770, 4);
+    expect(v).toBeGreaterThan(300);
+    expect(v).toBeLessThan(360);
+  });
+
   test("zero raw price throws", () => {
     expect(() => pricePerM3("gold", 0)).toThrow();
   });
@@ -48,7 +56,7 @@ describe("pricePerM3", () => {
 
 describe("FALLBACK_PRICES", () => {
   test("has snapshot for each commodity with fromFallback=true", () => {
-    for (const id of ["gold", "oil", "sugar"] as const) {
+    for (const id of ["gold", "oil", "sugar", "soybeans"] as const) {
       const snap = FALLBACK_PRICES[id];
       expect(snap.pricePerM3).toBeGreaterThan(0);
       expect(snap.fromFallback).toBe(true);

@@ -118,8 +118,8 @@ function PageInner() {
           </h1>
           <p className="mt-2 text-stone-600">
             Enter a US home address — we&apos;ll show how high a solid block of
-            gold, oil, or sugar worth its assessed value would stack on its
-            footprint.
+            gold, oil, sugar, or soybeans worth its assessed value would
+            stack on its footprint.
           </p>
         </div>
       )}
@@ -157,7 +157,9 @@ function PageInner() {
           <FallbackForm onSubmit={handleManualSubmit} />
         )}
 
-        {!loading && hasResult && <IsoViz result={result} />}
+        {!loading && hasResult && pricesRef.current && (
+          <IsoViz result={result} prices={pricesRef.current} />
+        )}
       </div>
 
       <footer className="mt-12 text-center text-xs text-stone-400">

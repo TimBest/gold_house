@@ -36,17 +36,27 @@ export const COMMODITIES: Record<CommodityId, CommodityConfig> = {
     color: "#FFFACD",
     rawPriceUnit: "USD/lb",
   },
+  soybeans: {
+    emoji: "🌱",
+    label: "Soybeans",
+    densityKgPerM3: 770,
+    color: "#6B8E23",
+    rawPriceUnit: "USD/bushel",
+  },
 };
 
 const TROY_OZ_KG = 0.0311035;
 const BARREL_M3 = 0.158987;
 const LB_KG = 0.453592;
+// USDA standard: 1 bushel of soybeans = 60 lb = 27.2155 kg.
+const SOYBEAN_BUSHEL_KG = 27.2155;
 
 /**
  * Convert a commodity's raw market price into USD per m^3 of solid material.
- *   gold: rawPrice is USD per troy oz       → / TROY_OZ_KG → kg basis → * density
- *   oil:  rawPrice is USD per barrel        → / BARREL_M3  → m3 basis directly
- *   sugar: rawPrice is USD per pound        → / LB_KG      → kg basis → * density
+ *   gold: rawPrice is USD per troy oz       → / TROY_OZ_KG       → kg → * density
+ *   oil:  rawPrice is USD per barrel        → / BARREL_M3        → m3 directly
+ *   sugar: rawPrice is USD per pound        → / LB_KG            → kg → * density
+ *   soybeans: rawPrice is USD per bushel    → / SOYBEAN_BUSHEL_KG → kg → * density
  */
 export function pricePerM3(
   commodity: CommodityId,
@@ -61,6 +71,8 @@ export function pricePerM3(
       return rawPrice / BARREL_M3;
     case "sugar":
       return (rawPrice / LB_KG) * densityKgPerM3;
+    case "soybeans":
+      return (rawPrice / SOYBEAN_BUSHEL_KG) * densityKgPerM3;
   }
 }
 
@@ -80,4 +92,5 @@ export const FALLBACK_PRICES: CommodityPrices = {
   gold: snap(pricePerM3("gold", 2700)),
   oil: snap(pricePerM3("oil", 78)),
   sugar: snap(pricePerM3("sugar", 0.2)),
+  soybeans: snap(pricePerM3("soybeans", 11.5)),
 };
